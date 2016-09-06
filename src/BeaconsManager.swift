@@ -37,7 +37,6 @@ public class BeaconsManager : NSObject, CLLocationManagerDelegate {
 	
 	//MARK Private Variables
 	internal var manager: CLLocationManager
-	internal var peripheralManager: CBPeripheralManager?
 
 	internal var monitoredGeoRegions: [GeoRegionRequest] = []
 	internal var monitoredBeaconRegions: [BeaconRegionRequest] = []

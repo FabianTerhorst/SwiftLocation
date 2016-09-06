@@ -28,7 +28,6 @@
 
 import Foundation
 import CoreLocation
-import MapKit
 
 /**
 State of the beacon region monitoring
@@ -54,31 +53,6 @@ public struct Event : OptionSetType {
 	public static let Ranging = Event(rawValue: 1 << 1)
 	/// Monitor both region cross boundary and beacon ranging events
 	public static let All : Event = [RegionBoundary, Ranging]
-}
-
-
-/**
-*  This structure define a beacon object
-*/
-public struct Beacon {
-	public var proximityUUID: String
-	public var major: CLBeaconMajorValue?
-	public var minor: CLBeaconMinorValue?
-	
-	/**
-	Initializa a new beacon to monitor
-	
-	- parameter proximity: This property contains the identifier that you use to identify your company’s beacons. You typically generate only one UUID for your company’s beacons but can generate more as needed. You generate this value using the uuidgen command-line tool
-	- parameter major:     The major property contains a value that can be used to group related sets of beacons. For example, a department store might assign the same major value for all of the beacons on the same floor.
-	- parameter minor:     The minor property specifies the individual beacon within a group. For example, for a group of beacons on the same floor of a department store, this value might be assigned to a beacon in a particular section.
-	
-	- returns: a new beacon structure
-	*/
-	public init(proximity: String, major: CLBeaconMajorValue?, minor: CLBeaconMinorValue?) {
-		self.proximityUUID = proximity
-		self.major = major
-		self.minor = minor
-	}
 }
 
 /**
@@ -140,68 +114,6 @@ public enum RequestState {
 	}
 }
 
-// MARK: - Support for Request protocol in CLGeocoder object
-
-extension CLGeocoder: Request {
-	
-	public func cancel(error: LocationError?) {
-		cancelGeocode()
-	}
-	
-	public func pause() {
-		// not available
-	}
-	
-	public func start() {
-		// not available
-	}
-	
-	public var UUID: String {
-		return "\(self.hash)"
-	}
-	
-	public var rState: RequestState {
-		return .Undetermined
-	}
-	
-	public var onAuthorizationDidChange: LocationHandlerAuthDidChange? {
-		// not supported
-		get { return nil }
-		set { }
-	}
-}
-
-// MARK: - Support for Request protocol in NSURLSessionDataTast object
-
-extension NSURLSessionDataTask: Request {
-
-	public func pause() {
-		self.suspend()
-	}
-	
-	public func start() {
-		self.resume()
-	}
-	
-	public var UUID: String {
-		return "\(self.hash)"
-	}
-	
-	public func cancel(error: LocationError?) {
-		self.cancel()
-	}
-	
-	public var rState: RequestState {
-		return .Undetermined
-	}
-	
-	public var onAuthorizationDidChange: LocationHandlerAuthDidChange? {
-		// not supported
-		get { return nil }
-		set { }
-	}
-}
-
 /**
 *  Each request in SwiftLocation support this protocol
 */
@@ -234,52 +146,10 @@ public protocol Request {
 }
 
 /// Handlers
-
-public typealias LocationHandlerError = ((CLLocation?, LocationError) -> Void)
-public typealias LocationHandlerSuccess = (CLLocation -> Void)
-public typealias LocationHandlerPaused = (CLLocation? -> Void)
-
 public typealias LocationHandlerAuthDidChange = (CLAuthorizationStatus? -> Void)
 
-public typealias RLocationErrorHandler = (LocationError -> Void)
-public typealias RLocationSuccessHandler = (CLPlacemark -> Void)
-
-public typealias HeadingHandlerError = (LocationError -> Void)
-public typealias HeadingHandlerSuccess = (CLHeading -> Void)
-public typealias HeadingHandlerCalibration = (Void -> Bool)
-
-public typealias VisitHandler = (CLVisit -> Void)
-
 public typealias RegionStateDidChange = (RegionState -> Void)
-public typealias RegionBeaconsRanging = ([CLBeacon] -> Void)
 public typealias RegionMonitorError = (LocationError -> Void)
-
-/**
-Type of service to used to perform the request
-
-- Apple:  standard apple services
-- Google: google own services (maybe limited in quota usage)
-*/
-public enum ReverseService {
-	case Apple
-	case Google
-}
-
-internal struct CLPlacemarkDictionaryKey {
-	// Parse address data
-	static let kSubAdministrativeArea = "SubAdministrativeArea"
-	static let kSubLocality           = "SubLocality"
-	static let kState                 = "State"
-	static let kStreet                = "Street"
-	static let kThoroughfare          = "Thoroughfare"
-	static let kFormattedAddressLines = "FormattedAddressLines"
-	static let kSubThoroughfare       = "SubThoroughfare"
-	static let kPostCodeExtension     = "PostCodeExtension"
-	static let kCity                  = "City"
-	static let kZIP                   = "ZIP"
-	static let kCountry               = "Country"
-	static let kCountryCode           = "CountryCode"
-}
 
 // MARK: - CLAuthorizationStatus description implementation
 extension CLAuthorizationStatus: CustomStringConvertible {
@@ -429,147 +299,4 @@ extension CLLocationManager {
 		if hasInUseAuth == true { return .OnlyInUse }
 		return .None
 	}
-}
-
-//MARK: Accuracy
-
-/**
-Allows you to specify the accuracy you want to achieve with a request.
-
-- IPScan:                                                Current location is discovered via IP Scan. This require a valid internet connection
-														 and don't use device's GPS sensor. It's good to preserve device's battery but does not
-														 return a precise position.
-- Any:                                                   First available location is accepted, no matter the accuracy
-- Country:                                               Only locations accurate to the nearest 100 kilometers are dispatched
-- City:                                                  Only locations accurate to the nearest three kilometers are dispatched
-- Neighborhood:                                          Only locations accurate to the nearest kilometer are dispatched
-- Block:                                                 Only locations accurate to the nearest one hundred meters are dispatched
-- House:                                                 Only locations accurate to the nearest ten meters are dispatched
-- Room:                                                  Use the highest-level of accuracy, may use high energy
-- Navigation:                                            Use the highest possible accuracy and combine it with additional sensor data.
-														 Use it only for applications that require precise position information ar all times
-														 (you should use it only when device is plugged in due to high battery usage level)
-*/
-public enum Accuracy: Int {
-	case IPScan = -1
-	case Any = 0
-	case Country = 1
-	case City = 2
-	case Neighborhood = 3
-	case Block = 4
-	case House = 5
-	case Room = 6
-	case Navigation = 7
-	
-	public var meters: Double {
-		switch self {
-		case Any:			return Double.infinity
-		case Country:		return 100000.0
-		case City:			return kCLLocationAccuracyThreeKilometers
-		case Neighborhood:	return kCLLocationAccuracyKilometer
-		case Block:			return kCLLocationAccuracyHundredMeters
-		case House:			return kCLLocationAccuracyNearestTenMeters
-		case Room:			return kCLLocationAccuracyBest
-		case Navigation:	return kCLLocationAccuracyBestForNavigation
-		case IPScan:		return Double.infinity // Not used
-		}
-	}
-	
-	/**
-	Validate a provided location against current value of the accuracy
-	
-	- parameter obj: provided location object
-	
-	- returns: true if location has an accuracy equal or grater than the one set by the struct itself
-	*/
-	internal func isLocationValidForAccuracy(obj: CLLocation) -> Bool {
-		switch self {
-		case Room, .Navigation:
-			return (obj.horizontalAccuracy < kCLLocationAccuracyNearestTenMeters)
-		default:
-			return (obj.horizontalAccuracy <= self.meters)
-		}
-	}
-}
-
-//MARK: UpdateFrequency
-
-/**
-This enum specify the type of frequency you want to receive updates about location when subscription
-is added to the main queue of the location manager.
-
-- Continuous:          receive each new valid location, never stop (you must stop it manually).
-- OneShot:             the first valid location data is received, then the request will be invalidated.
-- ByDistanceIntervals: receive a new update each time a new distance interval is travelled. Useful to keep battery usage low.
-- Significant:         receive only valid significant location updates. This capability provides tremendous power savings for apps that want to track a user’s approximate location and do not need highly accurate position information.
-*/
-public enum UpdateFrequency: Equatable, Comparable {
-	case Continuous
-	case OneShot
-	case ByDistanceIntervals(meters: Double)
-	case Significant
-}
-
-public func == (lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	switch (lhs,rhs) {
-	case (.ByDistanceIntervals(let d1), .ByDistanceIntervals(let d2)) where d1 == d2:
-		return true
-	case (.Continuous,.Continuous), (.OneShot, .OneShot), (.Significant, .Significant):
-		return true
-	default:
-		return false
-	}
-}
-
-public func < (lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	return u_lowerThan(includeEqual: false, lhs: lhs, rhs: rhs)
-}
-
-public func <= (lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	return u_lowerThan(includeEqual: true, lhs: lhs, rhs: rhs)
-}
-
-public func > (lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	return u_graterThan(includeEqual: false, lhs: lhs, rhs: rhs)
-}
-
-public func >= (lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	return u_graterThan(includeEqual: true, lhs: lhs, rhs: rhs)
-}
-
-private func u_lowerThan(includeEqual e: Bool, lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	switch (lhs, rhs) {
-	case (.Continuous, _), (.OneShot, _):
-		return true
-	case (.ByDistanceIntervals(let d1),.ByDistanceIntervals(let d2)):
-		return (e == true ? d1 <= d2 : d1 < d2)
-	case (.Significant, .Significant):
-		return true
-	default:
-		return false
-	}
-}
-
-private func u_graterThan(includeEqual e: Bool, lhs: UpdateFrequency, rhs: UpdateFrequency) -> Bool {
-	switch (lhs, rhs) {
-	case (.Significant, _):
-		return true
-	case (.ByDistanceIntervals(let d1),.ByDistanceIntervals(let d2)):
-		return (e == true ? d1 >= d2 : d1 > d2)
-	default:
-		return false
-	}
-}
-
-/**
-Specify an interval to receive new heading events
-
-- Continuous:    Receive events continuously; if you specify a non-nil interval events are dispatched when a minimum interval is reached
-- MagneticNorth: Receive events only when magnetic north degree is changed at least of specified interval
-- TrueNorth:     Receive events only when true north degree is changed at least of specified interval
-*/
-public enum HeadingFrequency {
-	case Continuous(interval: NSTimeInterval?)
-	case MagneticNorth(minChange: CLLocationDirection)
-	case TrueNorth(minChange: CLLocationDirection)
 }

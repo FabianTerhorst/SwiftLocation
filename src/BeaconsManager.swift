@@ -28,7 +28,6 @@
 
 import Foundation
 import CoreLocation
-import CoreBluetooth
 
 public let Beacons :BeaconsManager = BeaconsManager.shared
 

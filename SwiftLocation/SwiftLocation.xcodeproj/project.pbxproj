@@ -13,7 +13,6 @@
 		08819F371CD51FA700EFD938 /* Commons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08819F2F1CD51FA700EFD938 /* Commons.swift */; };
 		210301211D6CA7BE00A0A38C /* BeaconsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210301201D6CA7BE00A0A38C /* BeaconsManager.swift */; };
 		210301231D6CBEF100A0A38C /* GeoRegionRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210301221D6CBEF100A0A38C /* GeoRegionRequest.swift */; };
-		210301251D6CD22F00A0A38C /* BeaconRegionRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210301241D6CD22F00A0A38C /* BeaconRegionRequest.swift */; };
 		213F850B1D61C7FC00835DCA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213F850A1D61C7FC00835DCA /* AppDelegate.swift */; };
 		213F850D1D61C7FC00835DCA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213F850C1D61C7FC00835DCA /* ViewController.swift */; };
 		213F85101D61C7FC00835DCA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 213F850E1D61C7FC00835DCA /* Main.storyboard */; };
@@ -64,7 +63,6 @@
 		08819F2F1CD51FA700EFD938 /* Commons.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Commons.swift; path = ../../src/Commons.swift; sourceTree = "<group>"; };
 		210301201D6CA7BE00A0A38C /* BeaconsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BeaconsManager.swift; path = ../../src/BeaconsManager.swift; sourceTree = "<group>"; };
 		210301221D6CBEF100A0A38C /* GeoRegionRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GeoRegionRequest.swift; path = ../../src/GeoRegionRequest.swift; sourceTree = "<group>"; };
-		210301241D6CD22F00A0A38C /* BeaconRegionRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BeaconRegionRequest.swift; path = ../../src/BeaconRegionRequest.swift; sourceTree = "<group>"; };
 		213F85081D61C7FC00835DCA /* SwiftLocationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftLocationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		213F850A1D61C7FC00835DCA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		213F850C1D61C7FC00835DCA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -146,7 +144,6 @@
 			children = (
 				210301201D6CA7BE00A0A38C /* BeaconsManager.swift */,
 				210301221D6CBEF100A0A38C /* GeoRegionRequest.swift */,
-				210301241D6CD22F00A0A38C /* BeaconRegionRequest.swift */,
 			);
 			name = "Beacon Services";
 			sourceTree = "<group>";
@@ -308,7 +305,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				08819F371CD51FA700EFD938 /* Commons.swift in Sources */,
-				210301251D6CD22F00A0A38C /* BeaconRegionRequest.swift in Sources */,
 				210301231D6CBEF100A0A38C /* GeoRegionRequest.swift in Sources */,
 				210301211D6CA7BE00A0A38C /* BeaconsManager.swift in Sources */,
 			);

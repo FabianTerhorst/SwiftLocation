@@ -32,7 +32,7 @@ import CoreBluetooth
 
 public let Beacons :BeaconsManager = BeaconsManager.shared
 
-public class BeaconsManager : NSObject, CLLocationManagerDelegate, CBPeripheralManagerDelegate {
+public class BeaconsManager : NSObject, CLLocationManagerDelegate {
 	public static let shared = BeaconsManager()
 	
 	//MARK Private Variables
@@ -41,7 +41,6 @@ public class BeaconsManager : NSObject, CLLocationManagerDelegate, CBPeripheralM
 
 	internal var monitoredGeoRegions: [GeoRegionRequest] = []
 	internal var monitoredBeaconRegions: [BeaconRegionRequest] = []
-	internal var advertisedDevices: [BeaconAdvertiseRequest] = []
 
 	/// This identify the largest boundary distance allowed from a region’s center point.
 	/// Attempting to monitor a region with a distance larger than this value causes the location manager
@@ -120,30 +119,6 @@ public class BeaconsManager : NSObject, CLLocationManagerDelegate, CBPeripheralM
 		return request
 	}
 	
-	public func advertise(beaconName name: String, UUID: String, major: CLBeaconMajorValue?, minor: CLBeaconMinorValue?, powerRSSI: NSNumber, serviceUUIDs: [String]) -> Bool {
-		let idx = self.advertisedDevices.indexOf { $0.name == name }
-		if idx != nil { return false }
-		
-		guard let request = BeaconAdvertiseRequest(name: name, proximityUUID: UUID, major: major, minor: minor) else {
-			return false
-		}
-		request.start()
-		return true
-	}
-	
-	//MARK: Private Methods
-	
-	internal func stopAdvertise(beaconName: String, error: LocationError?) -> Bool {
-		guard let idx = self.advertisedDevices.indexOf({ $0.name == beaconName }) else {
-			return false
-		}
-		let request = self.advertisedDevices[idx]
-		request.rState = .Cancelled(error: error)
-		self.advertisedDevices.removeAtIndex(idx)
-		self.updateBeaconAdvertise()
-		return false
-	}
-	
 	private func createRegion(withBeacon beacon: Beacon, monitor: Event) throws -> BeaconRegionRequest {
 		if CLLocationManager.isMonitoringAvailableForClass(CLBeaconRegion.self) == false {
 			throw LocationError.NotSupported
@@ -152,23 +127,6 @@ public class BeaconsManager : NSObject, CLLocationManagerDelegate, CBPeripheralM
 			throw LocationError.InvalidBeaconData
 		}
 		return request
-	}
-	
-	internal func updateBeaconAdvertise() {
-		let active = self.advertisedDevices.filter { $0.rState.isRunning }
-		if active.count == 0 {
-			self.peripheralManager?.stopAdvertising()
-			self.peripheralManager = nil
-		} else {
-			if self.peripheralManager == nil {
-				self.peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
-			}
-			active.forEach({
-				if $0.rState.isPending == true {
-					self.peripheralManager?.startAdvertising($0.dataToAdvertise())
-				}
-			})
-		}
 	}
 	
 	internal func add(request request: Request) -> Bool {
@@ -291,16 +249,6 @@ public class BeaconsManager : NSObject, CLLocationManagerDelegate, CBPeripheralM
 			break
 		}
 		self.dispatchAuthorizationDidChange(status)
-	}
-	
-	@objc public func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager) {
-		if peripheral.state == CBPeripheralManagerState.PoweredOn {
-			self.advertisedDevices.forEach({ $0.start() })
-		} else {
-			let err = NSError(domain: NSCocoaErrorDomain, code: 0, userInfo: [NSLocalizedDescriptionKey : "Peripheral state changed to \(peripheral.state)"])
-			self.advertisedDevices.forEach({ $0.rState = .Cancelled(error: LocationError.LocationManager(error: err)) })
-			self.advertisedDevices.removeAll()
-		}
 	}
 	
 	//MARK: Location Manager Beacon/Geographic Regions

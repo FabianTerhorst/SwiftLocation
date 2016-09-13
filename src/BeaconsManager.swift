@@ -162,7 +162,7 @@ open class BeaconsManager : NSObject, CLLocationManagerDelegate {
 	}
 	
 	@objc open func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
-		let error = LocationError.locationManager(error: error)
+		let error = LocationError.locationManager(error: error as NSError?)
 		self.remove(request: self.monitoredGeo(forRegion: region), error: error)
 	}
 	

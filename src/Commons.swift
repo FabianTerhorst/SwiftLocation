@@ -36,14 +36,14 @@ State of the beacon region monitoring
 - Exited:  exited from the region
 */
 public enum RegionState {
-	case Entered
-	case Exited
+	case entered
+	case exited
 }
 
 /**
 *  This option set define the type of events you can monitor via BeaconManager class's monitor() func
 */
-public struct Event : OptionSetType {
+public struct Event : OptionSet {
 	public let rawValue: UInt8
 	public init(rawValue: UInt8) { self.rawValue = rawValue }
 	
@@ -66,17 +66,17 @@ This define the state of a request. Usually you don't need to acces to this info
 - Undetermined:    Undetermined state is usually used when the object cannot support request protocol
 */
 public enum RequestState {
-	case Pending
-	case Paused
-	case Cancelled(error: LocationError?)
-	case Running
-	case WaitingUserAuth
-	case Undetermined
+	case pending
+	case paused
+	case cancelled(error: LocationError?)
+	case running
+	case waitingUserAuth
+	case undetermined
 	
 	/// Request is running
 	public var isRunning: Bool {
 		switch self {
-		case .Running:
+		case .running:
 			return true
 		default:
 			return false
@@ -86,7 +86,7 @@ public enum RequestState {
 	/// Request is not running but can be started anytime
 	public var canStart: Bool {
 		switch self {
-		case .Paused, .Pending:
+		case .paused, .pending:
 			return true
 		default:
 			return false
@@ -96,7 +96,7 @@ public enum RequestState {
 	/// Request is on queue but it's in pause state
 	public var isPending: Bool {
 		switch self {
-		case .Pending, .WaitingUserAuth:
+		case .pending, .waitingUserAuth:
 			return true
 		default:
 			return false
@@ -106,7 +106,7 @@ public enum RequestState {
 	/// Request is on queue but it's in pause state
 	public var isCancelled: Bool {
 		switch self {
-		case .Cancelled(_):
+		case .cancelled(_):
 			return true
 		default:
 			return false
@@ -123,7 +123,7 @@ public protocol Request {
 	
 	- parameter error: optional error to cancel the request
 	*/
-	func cancel(error: LocationError?)
+	func cancel(_ error: LocationError?)
 	
 	/**
 	Pause a running request
@@ -146,24 +146,24 @@ public protocol Request {
 }
 
 /// Handlers
-public typealias LocationHandlerAuthDidChange = (CLAuthorizationStatus? -> Void)
+public typealias LocationHandlerAuthDidChange = ((CLAuthorizationStatus?) -> Void)
 
-public typealias RegionStateDidChange = (RegionState -> Void)
-public typealias RegionMonitorError = (LocationError -> Void)
+public typealias RegionStateDidChange = ((RegionState) -> Void)
+public typealias RegionMonitorError = ((LocationError) -> Void)
 
 // MARK: - CLAuthorizationStatus description implementation
 extension CLAuthorizationStatus: CustomStringConvertible {
 	public var description: String {
 		switch self {
-		case .Denied:
+		case .denied:
 			return "User Denied"
-		case .AuthorizedAlways:
+		case .authorizedAlways:
 			return "Always Authorized"
-		case .NotDetermined:
+		case .notDetermined:
 			return "Not Determined"
-		case .Restricted:
+		case .restricted:
 			return "Restricted"
-		case .AuthorizedWhenInUse:
+		case .authorizedWhenInUse:
 			return "Authorized In Use"
 		}
 	}
@@ -182,37 +182,37 @@ Define all possible error related to SwiftLocation library
 - NoDataReturned:              No data returned from this request
 - NotSupported:                Feature is not supported by the current hardware
 */
-public enum LocationError: ErrorType, CustomStringConvertible {
-	case MissingAuthorizationInPlist
-	case RequestTimeout
-	case AuthorizationDidChange(newStatus: CLAuthorizationStatus)
-	case LocationManager(error: NSError?)
-	case LocationNotAvailable
-	case NoDataReturned
-	case NotSupported
-	case InvalidBeaconData
+public enum LocationError: Error, CustomStringConvertible {
+	case missingAuthorizationInPlist
+	case requestTimeout
+	case authorizationDidChange(newStatus: CLAuthorizationStatus)
+	case locationManager(error: NSError?)
+	case locationNotAvailable
+	case noDataReturned
+	case notSupported
+	case invalidBeaconData
 	
 	public var description: String {
 		switch self {
-		case .MissingAuthorizationInPlist:
+		case .missingAuthorizationInPlist:
 			return "Missing Authorization in .plist file"
-		case .RequestTimeout:
+		case .requestTimeout:
 			return "Timeout for request"
-		case .AuthorizationDidChange(let status):
+		case .authorizationDidChange(let status):
 			return "Failed due to user auth status: '\(status)'"
-		case .LocationManager(let err):
+		case .locationManager(let err):
 			if let error = err {
 				return "Location manager error: \(error.localizedDescription)"
 			} else {
 				return "Generic location manager error"
 			}
-		case .LocationNotAvailable:
+		case .locationNotAvailable:
 			return "Location not avaiable"
-		case .NoDataReturned:
+		case .noDataReturned:
 			return "No Data Returned"
-		case .NotSupported:
+		case .notSupported:
 			return "Feature Not Supported"
-		case .InvalidBeaconData:
+		case .invalidBeaconData:
 			return "Cannot create monitor for beacon. Invalid data"
 		}
 	}
@@ -227,18 +227,18 @@ Location service state
 - Authorized:   This app is authorized to use location services.
 */
 public enum LocationServiceState: Equatable {
-	case Disabled
-	case Undetermined
-	case Denied
-	case Restricted
-	case Authorized(always: Bool)
+	case disabled
+	case undetermined
+	case denied
+	case restricted
+	case authorized(always: Bool)
 }
 
 public func == (lhs: LocationServiceState, rhs: LocationServiceState) -> Bool {
 	switch (lhs,rhs) {
-	case (.Authorized(let a1), .Authorized(let a2)):
+	case (.authorized(let a1), .authorized(let a2)):
 		return a1 == a2
-	case (.Disabled,.Disabled), (.Undetermined,.Undetermined), (.Denied,.Denied), (.Restricted,.Restricted):
+	case (.disabled,.disabled), (.undetermined,.undetermined), (.denied,.denied), (.restricted,.restricted):
 		return true
 	default:
 		return false
@@ -253,9 +253,9 @@ Location authorization status
 - OnlyInUse: app can receive location updates only in foreground
 */
 public enum LocationAuthType {
-	case None
-	case Always
-	case OnlyInUse
+	case none
+	case always
+	case onlyInUse
 }
 
 // MARK: - CLLocationManager
@@ -266,20 +266,20 @@ extension CLLocationManager {
 	public static var locationAuthStatus: LocationServiceState {
 		get {
 			if CLLocationManager.locationServicesEnabled() == false {
-				return .Disabled
+				return .disabled
 			} else {
 				let status = CLLocationManager.authorizationStatus()
 				switch status {
-				case .NotDetermined:
-					return .Undetermined
-				case .Denied:
-					return .Denied
-				case .Restricted:
-					return .Restricted
-				case .AuthorizedAlways:
-					return .Authorized(always: true)
-				case .AuthorizedWhenInUse:
-					return .Authorized(always: false)
+				case .notDetermined:
+					return .undetermined
+				case .denied:
+					return .denied
+				case .restricted:
+					return .restricted
+				case .authorizedAlways:
+					return .authorized(always: true)
+				case .authorizedWhenInUse:
+					return .authorized(always: false)
 				}
 			}
 		}
@@ -292,11 +292,11 @@ extension CLLocationManager {
 		/// Value of these keys if the message you want to show into system location request message the first time you
 		/// will access to the location manager.
 	internal static var bundleLocationAuthType: LocationAuthType {
-		let hasAlwaysAuth = (NSBundle.mainBundle().objectForInfoDictionaryKey("NSLocationAlwaysUsageDescription") != nil)
-		let hasInUseAuth = (NSBundle.mainBundle().objectForInfoDictionaryKey("NSLocationWhenInUseUsageDescription") != nil)
+		let hasAlwaysAuth = (Bundle.main.object(forInfoDictionaryKey: "NSLocationAlwaysUsageDescription") != nil)
+		let hasInUseAuth = (Bundle.main.object(forInfoDictionaryKey: "NSLocationWhenInUseUsageDescription") != nil)
 		
-		if hasAlwaysAuth == true { return .Always }
-		if hasInUseAuth == true { return .OnlyInUse }
-		return .None
+		if hasAlwaysAuth == true { return .always }
+		if hasInUseAuth == true { return .onlyInUse }
+		return .none
 	}
 }
